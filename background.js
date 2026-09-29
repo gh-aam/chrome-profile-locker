@@ -104,35 +104,41 @@ export async function lockProfile() {
     }
   }
 
-  // 3. Create focused lock window safely with fallbacks
+  // 3. Calculate centered coordinates for 480x640 dialog
+  const winWidth = 480;
+  const winHeight = 640;
+  let left = 450;
+  let top = 180;
+
+  try {
+    const focusedWin = await chrome.windows.getLastFocused();
+    if (focusedWin && focusedWin.width && focusedWin.height) {
+      left = Math.max(0, Math.round((focusedWin.left || 0) + ((focusedWin.width - winWidth) / 2)));
+      top = Math.max(0, Math.round((focusedWin.top || 0) + ((focusedWin.height - winHeight) / 2)));
+    }
+  } catch (err) {
+    console.warn('Center calculation fallback:', err);
+  }
+
+  // 4. Create compact centered lock dialog window
   let lockWindow;
   try {
-    // Normal window allows state: 'fullscreen' cleanly in Chromium
     lockWindow = await chrome.windows.create({
       url: chrome.runtime.getURL('lock/lock.html'),
-      type: 'normal',
-      state: 'fullscreen',
+      type: 'popup',
+      width: winWidth,
+      height: winHeight,
+      left: left,
+      top: top,
       focused: true
     });
   } catch (err1) {
-    console.warn('Fullscreen normal window fallback:', err1);
-    try {
-      // Fallback 1: Popup maximized
-      lockWindow = await chrome.windows.create({
-        url: chrome.runtime.getURL('lock/lock.html'),
-        type: 'popup',
-        state: 'maximized',
-        focused: true
-      });
-    } catch (err2) {
-      console.warn('Popup maximized fallback:', err2);
-      // Fallback 2: Standard popup
-      lockWindow = await chrome.windows.create({
-        url: chrome.runtime.getURL('lock/lock.html'),
-        type: 'popup',
-        focused: true
-      });
-    }
+    console.warn('Popup window creation fallback:', err1);
+    lockWindow = await chrome.windows.create({
+      url: chrome.runtime.getURL('lock/lock.html'),
+      type: 'popup',
+      focused: true
+    });
   }
 
   if (!lockWindow || !lockWindow.id) {
