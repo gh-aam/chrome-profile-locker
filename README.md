@@ -29,9 +29,9 @@ A secure, high-performance, Manifest V3 Chrome browser profile locker extension 
 
 ### Step 2: Load Unpacked Extension
 1. Click the **Load unpacked** button in the top-left corner.
-2. In the folder picker dialog, navigate to and select this folder:
-   ```
-   c:\Users\Abdullah Al Mamun\Desktop\AAM\Chrome Extension\Chrome Profile Locker
+2. In the folder picker dialog, navigate to and select the folder where you cloned or extracted this repository (the folder containing `manifest.json`):
+   ```text
+   path/to/chrome-profile-locker
    ```
 3. Click **Select Folder**.
 4. The extension **ProfileLock - Browser Profile Locker** will appear in your installed extensions list.
