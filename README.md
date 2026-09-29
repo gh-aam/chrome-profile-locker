@@ -7,7 +7,7 @@ A secure, high-performance, Manifest V3 Chrome browser profile locker extension 
 ## Features
 
 - 🔐 **PBKDF2-SHA256 Cryptography**: Master password/PIN stored locally with 100,000 iterations of PBKDF2 hashing, random salt, and timing-safe comparisons via Web Crypto API.
-- ⚡ **Instant Keyboard Lock**: Press <kbd>Ctrl+Shift+L</kbd> (<kbd>Command+Shift+L</kbd> on macOS) to instantly secure your profile.
+- ⚡ **Instant Keyboard Lock**: Press <kbd>Ctrl+Shift+L</kbd> or <kbd>Alt+Shift+L</kbd> (<kbd>Command+Shift+L</kbd> on macOS) to instantly secure your profile.
 - ⏱️ **Idle Auto-Lock**: Automatically locks the browser after a period of user inactivity (e.g. 5m, 15m, 30m).
 - 🛡️ **Anti-Bypass Window Containment**:
   - Automatically minimizes background windows when locked.
@@ -50,7 +50,7 @@ A secure, high-performance, Manifest V3 Chrome browser profile locker extension 
 ## How to Use ProfileLock
 
 ### 1. Locking the Browser
-- **Shortcut**: Press <kbd>Ctrl+Shift+L</kbd> (<kbd>Command+Shift+L</kbd> on Mac).
+- **Shortcut**: Press <kbd>Ctrl+Shift+L</kbd> or <kbd>Alt+Shift+L</kbd> (<kbd>Command+Shift+L</kbd> on Mac).
 - **Toolbar Action**: Click the ProfileLock icon in your Chrome toolbar and click **Lock Profile Now**.
 - **Browser Startup**: Whenever you relaunch Chrome, ProfileLock automatically locks down the browser until unlocked.
 - **Inactivity**: Walk away from your computer, and Chrome will lock after your configured idle timer expires.

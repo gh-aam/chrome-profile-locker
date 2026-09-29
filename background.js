@@ -58,9 +58,15 @@ async function updateSessionState(updates) {
 export async function lockProfile() {
   const config = await chrome.storage.local.get(['isConfigured', 'muteAudioOnLock']);
   if (!config.isConfigured) {
-    // If not configured yet, don't lock down; open setup
+    // If not configured yet, don't lock down; open or focus setup
     const setupUrl = chrome.runtime.getURL('setup/setup.html');
-    await chrome.tabs.create({ url: setupUrl });
+    const existing = await chrome.tabs.query({ url: setupUrl });
+    if (existing && existing.length > 0) {
+      await chrome.tabs.update(existing[0].id, { active: true });
+      await chrome.windows.update(existing[0].windowId, { focused: true });
+    } else {
+      await chrome.tabs.create({ url: setupUrl });
+    }
     return;
   }
 
@@ -69,7 +75,7 @@ export async function lockProfile() {
     // Already locked, verify if lock window still exists
     try {
       await chrome.windows.get(session.lockWindowId);
-      await chrome.windows.update(session.lockWindowId, { focused: true, state: 'fullscreen' });
+      await chrome.windows.update(session.lockWindowId, { focused: true });
       return;
     } catch {
       // Window might have been lost, proceed to create new lock window
@@ -98,23 +104,49 @@ export async function lockProfile() {
     }
   }
 
-  // 3. Mark state as locked before opening window to ensure listeners engage
+  // 3. Create focused lock window safely with fallbacks
+  let lockWindow;
+  try {
+    // Normal window allows state: 'fullscreen' cleanly in Chromium
+    lockWindow = await chrome.windows.create({
+      url: chrome.runtime.getURL('lock/lock.html'),
+      type: 'normal',
+      state: 'fullscreen',
+      focused: true
+    });
+  } catch (err1) {
+    console.warn('Fullscreen normal window fallback:', err1);
+    try {
+      // Fallback 1: Popup maximized
+      lockWindow = await chrome.windows.create({
+        url: chrome.runtime.getURL('lock/lock.html'),
+        type: 'popup',
+        state: 'maximized',
+        focused: true
+      });
+    } catch (err2) {
+      console.warn('Popup maximized fallback:', err2);
+      // Fallback 2: Standard popup
+      lockWindow = await chrome.windows.create({
+        url: chrome.runtime.getURL('lock/lock.html'),
+        type: 'popup',
+        focused: true
+      });
+    }
+  }
+
+  if (!lockWindow || !lockWindow.id) {
+    console.error('Failed to create lock window.');
+    await updateSessionState({ isLocked: false });
+    return;
+  }
+
+  // 4. Commit locked state with valid window ID
   await updateSessionState({
     isLocked: true,
+    lockWindowId: lockWindow.id,
     mutedTabIds: mutedTabIds,
     isUnlocking: false
-  });
-
-  // 4. Create focused fullscreen lock screen window
-  const lockWindow = await chrome.windows.create({
-    url: chrome.runtime.getURL('lock/lock.html'),
-    type: 'popup',
-    state: 'fullscreen',
-    focused: true
-  });
-
-  await updateSessionState({
-    lockWindowId: lockWindow.id
   });
 
   // 5. Minimize other normal browser windows to prevent background viewing
@@ -254,9 +286,9 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
   }
 });
 
-// 4. Keyboard Shortcut Command (Ctrl+Shift+L)
+// 4. Keyboard Shortcut Commands (Ctrl+Shift+L or Alt+Shift+L)
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command === 'lock-profile') {
+  if (command === 'lock-profile' || command === 'lock-profile-alt') {
     await lockProfile();
   }
 });
@@ -274,7 +306,7 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
         try {
           // Re-minimize other window and refocus lock window
           await chrome.windows.update(windowId, { state: 'minimized' });
-          await chrome.windows.update(session.lockWindowId, { focused: true, state: 'fullscreen' });
+          await chrome.windows.update(session.lockWindowId, { focused: true });
         } catch (err) {
           console.warn('Containment focus error:', err);
         }
@@ -308,7 +340,7 @@ chrome.tabs.onCreated.addListener(async (tab) => {
       // Tab created in another window while locked; close it and refocus lock window
       try {
         await chrome.tabs.remove(tab.id);
-        await chrome.windows.update(session.lockWindowId, { focused: true, state: 'fullscreen' });
+        await chrome.windows.update(session.lockWindowId, { focused: true });
       } catch (err) {
         console.warn('Tab containment error:', err);
       }
