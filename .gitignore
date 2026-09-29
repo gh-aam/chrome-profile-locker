@@ -1,0 +1,18 @@
+# Operating System Files
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Extension Packaging Artifacts
+*.crx
+*.pem
+*.zip
+
+# Logs
+*.log

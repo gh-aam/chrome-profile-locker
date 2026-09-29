@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "ProfileLock - Browser Profile Locker",
+  "version": "1.0.0",
+  "description": "Secure your Chrome browser profile with password protection, auto-lock on idle, anti-bypass containment, and emergency recovery.",
+  "permissions": [
+    "storage",
+    "idle",
+    "tabs",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "ProfileLock",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "lock-profile": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Lock browser profile immediately"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
